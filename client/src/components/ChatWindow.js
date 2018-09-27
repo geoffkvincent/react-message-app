@@ -10,6 +10,7 @@ import {
   Button,
 } from 'semantic-ui-react'
 import styled from 'styled-components'
+import axios from 'axios'
 import ChatMessage from './ChatMessage'
 
 const MainWindow = styled(Segment)`
@@ -35,7 +36,15 @@ class ChatWindow extends React.Component {
   state = { message: '' }
 
   componentDidMount() {
+    window.MessageBus.start()
     this.props.dispatch(setFlash('Welcome to React Chat', 'green'))
+
+    window.MessageBus.subscribe("/chat_message", (data) => {
+      dispatch(addMessage(data))
+    })
+  }
+  componentWillMount() {
+    window.MessageBus.unsubscribe("/chat_channel")
   }
   
   displayMessages = () => {
@@ -57,10 +66,10 @@ class ChatWindow extends React.Component {
 
   addMessage = (e) => {
     e.preventDefault()
-    const { dispatch, user: { email } } = this.props
     const { message } = this.state
-    dispatch(addMessage({ email, body: message }))
-    this.setState({ message: '' })
+    axios.post('/api/messages', { body: message })
+      .then( () => this.setState({ message: '' }) ) 
+    
   }
 
   render() {
